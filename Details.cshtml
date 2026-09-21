@@ -1,0 +1,58 @@
+@model MyLibrary.Models.Book
+@using MyLibrary.Models
+@{ ViewData["Title"] = Model.Title; }
+
+<div class="row g-4">
+    <div class="col-md-4">
+        @if (!string.IsNullOrWhiteSpace(Model.CoverUrl))
+        {
+            <img src="@Model.CoverUrl" class="w-100 rounded-4" style="box-shadow:var(--lib-shadow)" alt="@Model.Title"
+                 onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'book-cover-placeholder rounded-4',style:'height:340px',innerText:'📕'}))" />
+        }
+        else
+        {
+            <div class="book-cover-placeholder rounded-4" style="height:340px;font-size:4rem">📕</div>
+        }
+    </div>
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h2 class="mb-0">@Model.Title @(Model.IsFavorite ? "♥" : "")</h2>
+                <p class="text-muted">@Model.Author @(Model.Year != null ? $"· {Model.Year}" : "") @(Model.Genre != null ? $"· {Model.Genre}" : "")</p>
+            </div>
+            <span class="badge fs-6 @(Model.Status==ReadStatus.Read?"badge-status-read":Model.Status==ReadStatus.Reading?"badge-status-reading":"badge-status-want")">
+                @(Model.Status == ReadStatus.Read ? "Прочитано" : Model.Status == ReadStatus.Reading ? "Читаю" : "Хочу прочитать")
+            </span>
+        </div>
+
+        @if (Model.Rating.HasValue)
+        {
+            <p class="stars fs-5">@(new string('★', (int)Model.Rating.Value))@(new string('☆', 5 - (int)Model.Rating.Value)) <span class="text-muted fs-6">(@Model.Rating / 5)</span></p>
+        }
+
+        @if (Model.Pages.HasValue)
+        {
+            <p class="text-muted mb-1">Страниц: @Model.Pages @(Model.CurrentPage.HasValue ? $"(прочитано {Model.CurrentPage})" : "")</p>
+            @if (Model.Status == ReadStatus.Reading)
+            {
+                <div class="progress mb-3" style="max-width:300px">
+                    <div class="progress-bar" style="width:@(Model.ProgressPercent)%"></div>
+                </div>
+            }
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Notes))
+        {
+            <div class="filter-panel mt-3">
+                <h6 class="text-uppercase text-muted" style="font-size:.75rem;letter-spacing:1px">Заметки</h6>
+                <p class="mb-0">@Model.Notes</p>
+            </div>
+        }
+
+        <div class="mt-4 d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-lib-primary">Редактировать</a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">Удалить</a>
+            <a asp-action="Index" class="btn btn-link">← Ко всем книгам</a>
+        </div>
+    </div>
+</div>

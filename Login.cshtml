@@ -1,0 +1,30 @@
+@page
+@model MyLibrary.Areas.Identity.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Вход";
+}
+
+<div class="filter-panel mx-auto" style="max-width:420px">
+    <h2 class="mb-4 text-center">Вход в библиотеку 📚</h2>
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="Input.Email" class="form-label"></label>
+            <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="you@example.com" />
+            <span asp-validation-for="Input.Email" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Input.Password" class="form-label"></label>
+            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" />
+            <span asp-validation-for="Input.Password" class="text-danger small"></span>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="Input.RememberMe" class="form-check-input" />
+            <label asp-for="Input.RememberMe" class="form-check-label"></label>
+        </div>
+        <button type="submit" class="btn btn-lib-primary w-100">Войти</button>
+    </form>
+    <div class="text-center mt-3">
+        <a asp-page="./Register">Ещё нет аккаунта? Зарегистрироваться</a>
+    </div>
+</div>

@@ -1,0 +1,188 @@
+@model MyLibrary.Models.BooksIndexViewModel
+@using MyLibrary.Models
+@{
+    ViewData["Title"] = "Все книги";
+    var f = Model.Filter;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h2 class="mb-0">Все книги <span class="text-muted fs-6">(@Model.TotalCount)</span></h2>
+    <div class="d-flex gap-2">
+        <a class="btn btn-lib-primary" asp-action="Create">+ Добавить книгу</a>
+        <a class="btn btn-outline-lib" asp-action="ExportCsv">Экспорт CSV</a>
+        <a class="btn btn-outline-lib" asp-action="ExportPdf">Экспорт PDF</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-3">
+        <form method="get" asp-action="Index" class="filter-panel">
+            <h6 class="text-uppercase text-muted mb-3" style="font-size:.75rem;letter-spacing:1px">Фильтры</h6>
+
+            <div class="mb-3">
+                <label class="form-label">Поиск</label>
+                <input type="text" name="Search" value="@f.Search" class="form-control" placeholder="Название или автор" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Статус</label>
+                <select name="Status" class="form-select" asp-items="Html.GetEnumSelectList<ReadStatus>()">
+                    <option value="">Все</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Жанр</label>
+                <select name="Genre" class="form-select">
+                    <option value="">Все жанры</option>
+                    @foreach (var g in Model.AvailableGenres)
+                    {
+                        <option value="@g" selected="@(g == f.Genre)">@g</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Мин. рейтинг</label>
+                <select name="MinRating" class="form-select">
+                    <option value="">Любой</option>
+                    @foreach (var r in new[] { 5, 4, 3, 2, 1 })
+                    {
+                        <option value="@r" selected="@(f.MinRating == r)">от @r ★</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Год издания</label>
+                <div class="d-flex gap-2">
+                    <input type="number" name="YearFrom" value="@f.YearFrom" class="form-control" placeholder="от" />
+                    <input type="number" name="YearTo" value="@f.YearTo" class="form-control" placeholder="до" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Сортировка</label>
+                <select name="Sort" class="form-select">
+                    <option value="added_desc" selected="@(f.Sort=="added_desc")">Сначала новые</option>
+                    <option value="title_asc" selected="@(f.Sort=="title_asc")">Название А-Я</option>
+                    <option value="title_desc" selected="@(f.Sort=="title_desc")">Название Я-А</option>
+                    <option value="rating_desc" selected="@(f.Sort=="rating_desc")">Сначала высокий рейтинг</option>
+                    <option value="year_desc" selected="@(f.Sort=="year_desc")">Сначала новые издания</option>
+                    <option value="year_asc" selected="@(f.Sort=="year_asc")">Сначала старые издания</option>
+                </select>
+            </div>
+
+            <input type="hidden" name="ViewMode" value="@f.ViewMode" />
+            <button type="submit" class="btn btn-lib-primary w-100">Применить</button>
+            <a asp-action="Index" class="btn btn-link w-100 mt-1">Сбросить</a>
+        </form>
+    </div>
+
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-end mb-3">
+            <div class="btn-group">
+                <a class="btn btn-sm @(f.ViewMode=="cards" ? "btn-lib-primary" : "btn-outline-lib")"
+                   href="@Url.Action("Index", new { f.Status, f.Genre, f.MinRating, f.YearFrom, f.YearTo, f.Search, f.Sort, ViewMode = "cards" })">Карточки</a>
+                <a class="btn btn-sm @(f.ViewMode=="list" ? "btn-lib-primary" : "btn-outline-lib")"
+                   href="@Url.Action("Index", new { f.Status, f.Genre, f.MinRating, f.YearFrom, f.YearTo, f.Search, f.Sort, ViewMode = "list" })">Список</a>
+            </div>
+        </div>
+
+        @if (!Model.Books.Any())
+        {
+            <div class="text-center text-muted py-5">
+                <div style="font-size:3rem">📖</div>
+                <p>Книг по заданным фильтрам не найдено.</p>
+            </div>
+        }
+        else if (f.ViewMode == "list")
+        {
+            @foreach (var b in Model.Books)
+            {
+                <div class="book-row d-flex justify-content-between align-items-center">
+                    <div>
+                        <a asp-action="Details" asp-route-id="@b.Id" class="text-decoration-none text-dark fw-bold">@b.Title</a>
+                        <div class="text-muted small">@b.Author @(b.Year != null ? $"· {b.Year}" : "") @(b.Genre != null ? $"· {b.Genre}" : "")</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        @if (b.Rating.HasValue)
+                        {
+                            <span class="stars">@(new string('★', (int)b.Rating.Value))@(new string('☆', 5 - (int)b.Rating.Value))</span>
+                        }
+                        <span class="badge @(b.Status==ReadStatus.Read?"badge-status-read":b.Status==ReadStatus.Reading?"badge-status-reading":"badge-status-want")">
+                            @(b.Status == ReadStatus.Read ? "Прочитано" : b.Status == ReadStatus.Reading ? "Читаю" : "Хочу прочитать")
+                        </span>
+                        <a asp-action="Edit" asp-route-id="@b.Id" class="btn btn-sm btn-outline-lib">✎</a>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-4">
+                @foreach (var b in Model.Books)
+                {
+                    <div class="col">
+                        <div class="book-card-wrap">
+                            <button class="fav-btn @(b.IsFavorite ? "active" : "")" data-id="@b.Id" title="В избранное">
+                                @(b.IsFavorite ? "♥" : "♡")
+                            </button>
+                            <a asp-action="Details" asp-route-id="@b.Id" class="text-decoration-none text-dark">
+                                <div class="book-card">
+                                    @if (!string.IsNullOrWhiteSpace(b.CoverUrl))
+                                    {
+                                        <img src="@b.CoverUrl" class="book-cover" alt="@b.Title" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'book-cover-placeholder',innerText:'📕'}))" />
+                                    }
+                                    else
+                                    {
+                                        <div class="book-cover-placeholder">📕</div>
+                                    }
+                                    <div class="card-body">
+                                        <div class="book-title">@b.Title</div>
+                                        <div class="book-author">@b.Author @(b.Year != null ? $"· {b.Year}" : "")</div>
+
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge @(b.Status==ReadStatus.Read?"badge-status-read":b.Status==ReadStatus.Reading?"badge-status-reading":"badge-status-want")">
+                                                @(b.Status == ReadStatus.Read ? "Прочитано" : b.Status == ReadStatus.Reading ? "Читаю" : "Хочу прочитать")
+                                            </span>
+                                            @if (b.Rating.HasValue)
+                                            {
+                                                <span class="stars small">@(new string('★', (int)b.Rating.Value))</span>
+                                            }
+                                        </div>
+
+                                        @if (b.Status == ReadStatus.Reading && b.Pages > 0)
+                                        {
+                                            <div class="progress">
+                                                <div class="progress-bar" style="width:@(b.ProgressPercent)%"></div>
+                                            </div>
+                                            <div class="text-muted small mt-1">@b.ProgressPercent% прочитано</div>
+                                        }
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.querySelectorAll('.fav-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const id = btn.dataset.id;
+        const res = await fetch(`/Books/ToggleFavorite/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+            btn.classList.toggle('active', data.isFavorite);
+            btn.textContent = data.isFavorite ? '♥' : '♡';
+        }
+    });
+});
+</script>
+}

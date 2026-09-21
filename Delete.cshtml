@@ -1,0 +1,11 @@
+@model MyLibrary.Models.Book
+@{ ViewData["Title"] = "Удалить книгу"; }
+
+<div class="filter-panel" style="max-width:500px">
+    <h4>Удалить книгу?</h4>
+    <p>Вы уверены, что хотите удалить «<strong>@Model.Title</strong>» (@Model.Author)? Это действие необратимо.</p>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        <button type="submit" class="btn btn-danger">Да, удалить</button>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-link">Отмена</a>
+    </form>
+</div>

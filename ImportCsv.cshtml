@@ -1,0 +1,22 @@
+@{ ViewData["Title"] = "Импорт CSV"; }
+
+<h2 class="mb-4">Импорт книг из CSV</h2>
+
+<div class="filter-panel" style="max-width:600px">
+    <p class="text-muted">
+        Файл должен быть в формате, соответствующем экспорту (разделитель «;»),
+        с заголовками: <code>Название;Автор;Жанр;Год;Страниц;Рейтинг;Статус;Дата завершения</code>.
+        Значения статуса: <code>WantToRead</code>, <code>Reading</code>, <code>Read</code>.
+    </p>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="text-danger"></div>
+    }
+    <form asp-action="ImportCsv" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <input type="file" name="file" accept=".csv" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-lib-primary">Импортировать</button>
+        <a asp-action="Index" class="btn btn-link">Отмена</a>
+    </form>
+</div>

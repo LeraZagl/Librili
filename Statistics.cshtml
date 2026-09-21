@@ -1,0 +1,106 @@
+@model MyLibrary.Models.StatisticsViewModel
+@using System.Text.Json
+@{ ViewData["Title"] = "Статистика"; }
+
+<h2 class="mb-4">Статистика библиотеки</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-2">
+        <div class="stat-tile"><div class="stat-num">@Model.TotalBooks</div><div class="stat-label">Всего книг</div></div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="stat-tile"><div class="stat-num">@Model.ReadCount</div><div class="stat-label">Прочитано</div></div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="stat-tile"><div class="stat-num">@Model.ReadingCount</div><div class="stat-label">Читаю сейчас</div></div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="stat-tile"><div class="stat-num">@Model.WantToReadCount</div><div class="stat-label">Хочу прочитать</div></div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="stat-tile"><div class="stat-num">@Model.TotalPagesRead</div><div class="stat-label">Страниц прочитано</div></div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="stat-tile"><div class="stat-num">@Model.AverageRating</div><div class="stat-label">Средний рейтинг</div></div>
+    </div>
+</div>
+
+@if (Model.BookOfTheMonth != null)
+{
+    <div class="botm-card mb-4">
+        <div class="text-uppercase" style="font-size:.75rem;letter-spacing:1px;opacity:.8">🎲 Случайный выбор из списка «Хочу прочитать»</div>
+        <h4 class="mb-1 mt-1">@Model.BookOfTheMonth.Title</h4>
+        <p class="mb-0" style="opacity:.85">@Model.BookOfTheMonth.Author</p>
+        <a asp-action="Details" asp-route-id="@Model.BookOfTheMonth.Id" class="btn btn-sm btn-light mt-2">Открыть книгу</a>
+    </div>
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="chart-box">
+            <h6 class="text-center mb-3">По статусу</h6>
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="chart-box">
+            <h6 class="text-center mb-3">По жанрам</h6>
+            <canvas id="genreChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="chart-box">
+            <h6 class="text-center mb-3">Прочитано по месяцам</h6>
+            <canvas id="monthChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="chart-box mb-4">
+    <h6 class="mb-3">Топ авторов по количеству книг</h6>
+    <canvas id="authorChart" height="90"></canvas>
+</div>
+
+@section Scripts {
+<script>
+    const statusData = @Html.Raw(JsonSerializer.Serialize(new[] { Model.ReadCount, Model.ReadingCount, Model.WantToReadCount }));
+    const genreLabels = @Html.Raw(JsonSerializer.Serialize(Model.ByGenre.Keys));
+    const genreData = @Html.Raw(JsonSerializer.Serialize(Model.ByGenre.Values));
+    const monthLabels = @Html.Raw(JsonSerializer.Serialize(Model.FinishedByMonth.Keys));
+    const monthData = @Html.Raw(JsonSerializer.Serialize(Model.FinishedByMonth.Values));
+    const authorLabels = @Html.Raw(JsonSerializer.Serialize(Model.ByAuthor.Keys));
+    const authorData = @Html.Raw(JsonSerializer.Serialize(Model.ByAuthor.Values));
+
+    const palette = ['#6B8F71','#6E8FAE','#D7A86E','#C1666B','#8D6E63','#B9834A','#3E2723','#A9C4A4'];
+
+    new Chart(document.getElementById('statusChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Прочитано', 'Читаю', 'Хочу прочитать'],
+            datasets: [{ data: statusData, backgroundColor: ['#6B8F71','#6E8FAE','#D7A86E'] }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    new Chart(document.getElementById('genreChart'), {
+        type: 'doughnut',
+        data: { labels: genreLabels, datasets: [{ data: genreData, backgroundColor: palette }] },
+        options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+    });
+
+    new Chart(document.getElementById('monthChart'), {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [{ label: 'Книг прочитано', data: monthData, borderColor: '#B9834A', backgroundColor: 'rgba(185,131,74,.2)', fill: true, tension: .3 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    new Chart(document.getElementById('authorChart'), {
+        type: 'bar',
+        data: { labels: authorLabels, datasets: [{ label: 'Книг', data: authorData, backgroundColor: '#8D6E63' }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+</script>
+}

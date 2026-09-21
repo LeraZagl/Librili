@@ -1,0 +1,9 @@
+@page
+@model MyLibrary.Areas.Identity.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Выход";
+}
+<div class="text-center py-5">
+    <p class="fs-5">Вы вышли из аккаунта.</p>
+    <a asp-controller="Books" asp-action="Index" class="btn btn-lib-primary">На главную</a>
+</div>
